@@ -2,13 +2,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:jms="http://www.springframework.org/schema/jms"
+       xmlns:jms="http://www.springframework.org/schema/jms" xmlns:jee="http://www.springframework.org/schema/jee"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
         http://www.springframework.org/schema/context
         http://www.springframework.org/schema/context/spring-context-3.1.xsd
         http://www.springframework.org/schema/jms
-        http://www.springframework.org/schema/jms/spring-jms.xsd">
+        http://www.springframework.org/schema/jms/spring-jms.xsd http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd">
 
     <!-- Configure PlaceHolder Properties -->
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -188,6 +188,16 @@
         <property name="exceptionListener" ref="jmsExceptionListener"/>
         <property name="transportListener" ref="jmsTransportListener"/>
     </bean>
+
+    <jee:jndi-lookup id="jmsConnectionFactory" jndi-name="java:/JmsXA" resource-ref="false" proxy-interface="javax.jms.ConnectionFactory"/>
+
+    <jee:jndi-lookup id="myQueue" jndi-name="java:jboss/exported/jms/queue/myQueue"/>
+
+    <bean id="myHandler" class="com.example.MyHandler" />
+
+    <jms:listener-container destination-type="queue" acknowledge="auto" connection-factory="connectionFactory">
+        <jms:listener destination="java:jboss/exported/jms/queue/myQueue" ref="cacheMessageListener" method="onMessage" />
+    </jms:listener-container>
 
     <jms:listener-container container-type="default" destination-type="topic" connection-factory="connectionFactory" acknowledge="auto">
         <jms:listener destination="${jms.topicName}" ref="cacheMessageListener" method="onMessage"/>
